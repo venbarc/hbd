@@ -1,0 +1,110 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+@layer base {
+  html, body, #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-ocean-900 text-white font-sans antialiased;
+    margin: 0;
+  }
+}
+
+/* Ocean overlay — deep, vivid underwater tones */
+.ocean-overlay {
+  background: linear-gradient(
+    180deg,
+    rgba(0, 70, 120, 0.22) 0%,
+    rgba(0, 100, 160, 0.38) 50%,
+    rgba(0, 30, 70, 0.6) 100%
+  );
+  backdrop-filter: blur(1px);
+}
+
+/* Glass card — deep ocean glass with premium feel */
+.glass-card {
+  background: rgba(3, 22, 45, 0.56);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    0 28px 72px rgba(2, 12, 30, 0.6),
+    0 0 0 0.5px rgba(255, 255, 255, 0.05) inset,
+    0 1px 0 rgba(255, 255, 255, 0.12) inset;
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+}
+
+/* Rising bubbles */
+.bubble {
+  position: absolute;
+  bottom: -12%;
+  left: var(--left);
+  width: var(--size);
+  height: var(--size);
+  border-radius: 999px;
+  opacity: var(--opacity);
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.1));
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  filter: blur(0.2px);
+  animation: bubble-rise var(--duration) linear infinite;
+  animation-delay: var(--delay);
+}
+
+@keyframes bubble-rise {
+  from {
+    transform: translateY(0) scale(0.85);
+  }
+  to {
+    transform: translateY(-120vh) scale(1.1);
+  }
+}
+
+/* Sparkle particles — golden glow */
+.sparkle {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 240, 80, 0.98) 0%,
+    rgba(255, 190, 20, 0.4) 50%,
+    transparent 100%
+  );
+  mix-blend-mode: screen;
+  box-shadow: 0 0 10px 3px rgba(255, 215, 30, 0.45);
+}
+
+/* Birthday name — gold shimmer gradient text with glow */
+.birthday-name-shimmer {
+  background: linear-gradient(
+    90deg,
+    #fff5c0 0%,
+    #fbbf24 18%,
+    #f59e0b 36%,
+    #fde68a 54%,
+    #f59e0b 72%,
+    #fbbf24 90%,
+    #fff5c0 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: text-shimmer 2.6s linear infinite;
+  filter: drop-shadow(0 0 14px rgba(251, 191, 36, 0.55))
+          drop-shadow(0 0 32px rgba(245, 158, 11, 0.28));
+}
+
+@keyframes text-shimmer {
+  0% {
+    background-position: 0% center;
+  }
+  100% {
+    background-position: -200% center;
+  }
+}
