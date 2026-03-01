@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Volume2, VolumeX } from 'lucide-react'
 import BubbleBackground from './components/BubbleBackground'
@@ -15,14 +15,26 @@ const oneLiners = [
   'Good vibes are drifting in with the current.',
 ]
 
+// Detect Facebook/Instagram/Messenger in-app browsers
+function isInAppBrowser() {
+  const ua = navigator.userAgent || ''
+  return /FBAN|FBAV|FB_IAB|Instagram|Messenger/.test(ua)
+}
+
 export default function App() {
   const [started, setStarted] = useState(false)
   const [subtextIndex, setSubtextIndex] = useState(() =>
     Math.floor(Math.random() * oneLiners.length),
   )
   const [isPlaying, setIsPlaying] = useState(false)
-  const [musicKey, setMusicKey] = useState(0)
   const [celebrateKey, setCelebrateKey] = useState(0)
+  const [showIABBanner, setShowIABBanner] = useState(false)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  // Detect in-app browser once on mount
+  useEffect(() => {
+    if (isInAppBrowser()) setShowIABBanner(true)
+  }, [])
 
   // Auto-rotate greeting every 5 seconds once started
   useEffect(() => {
@@ -37,23 +49,83 @@ export default function App() {
     return () => clearInterval(id)
   }, [started])
 
-  const handleToggleMusic = () => {
-    setIsPlaying((prev) => {
-      if (!prev) setMusicKey((v) => v + 1)
-      return !prev
+  const playAudio = () => {
+    const audio = audioRef.current
+    if (!audio) return
+    audio.currentTime = 0
+    audio.play().catch(() => {
+      // Autoplay blocked — user must tap again; the button is already visible
     })
   }
 
+  const handleToggleMusic = () => {
+    const audio = audioRef.current
+    if (!audio) return
+    if (isPlaying) {
+      audio.pause()
+      setIsPlaying(false)
+    } else {
+      audio.play().catch(() => {})
+      setIsPlaying(true)
+    }
+  }
+
   const handleStart = () => {
-    setIsPlaying(true)
-    setMusicKey((v) => v + 1)
     setCelebrateKey((v) => v + 1)
     setSubtextIndex(Math.floor(Math.random() * oneLiners.length))
     setStarted(true)
+    // Play audio synchronously inside user gesture — works in all WebViews
+    playAudio()
+    setIsPlaying(true)
   }
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
+      {/* In-app browser banner */}
+      <AnimatePresence>
+        {showIABBanner && (
+          <motion.div
+            initial={{ y: -60, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -60, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 22 }}
+            className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between gap-3 bg-ocean-900/95 px-4 py-3 backdrop-blur-sm"
+          >
+            <p className="text-xs text-white/75 leading-snug">
+              For music &amp; best experience, open in your browser.
+            </p>
+            <div className="flex items-center gap-2 shrink-0">
+              <a
+                href={window.location.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-full bg-pineapple-400 px-3 py-1.5 font-display text-[10px] font-bold uppercase tracking-widest text-ocean-900 whitespace-nowrap"
+              >
+                Open
+              </a>
+              <button
+                type="button"
+                onClick={() => setShowIABBanner(false)}
+                className="text-white/40 hover:text-white/70 text-lg leading-none"
+                aria-label="Dismiss"
+              >
+                ✕
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Hidden HTML5 audio — must exist in DOM always so ref is stable */}
+      <audio
+        ref={audioRef}
+        src="/i would like to greet to the happy birthday.mp3"
+        loop
+        playsInline
+        preload="auto"
+        className="hidden"
+      />
+
       {/* Layer 1 — background */}
       <div className="absolute inset-0 bg-[url('/sbhouse.webp')] bg-cover bg-center" />
       <div className="absolute inset-0 ocean-overlay" />
@@ -204,20 +276,6 @@ export default function App() {
           )}
         </AnimatePresence>
       </div>
-
-      {/* Hidden audio — playsinline=1 required for iOS autoplay */}
-      {isPlaying && (
-        <iframe
-          key={musicKey}
-          className="absolute h-0 w-0 opacity-0"
-          src="https://www.youtube-nocookie.com/embed/N6-0syjL9nU?autoplay=1&loop=1&playlist=N6-0syjL9nU&playsinline=1&mute=0"
-          title="Bikini Bottom ambience"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-          tabIndex={-1}
-          aria-hidden="true"
-        />
-      )}
     </div>
   )
 }
