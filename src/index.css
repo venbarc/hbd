@@ -40,6 +40,18 @@
   -webkit-backdrop-filter: blur(32px);
 }
 
+/* Reduce blur cost on mobile — heavy backdrop-filter tanks GPU on phones */
+@media (max-width: 639px) {
+  .glass-card {
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+
+  .ocean-overlay {
+    backdrop-filter: none;
+  }
+}
+
 /* Rising bubbles */
 .bubble {
   position: absolute;

@@ -205,14 +205,15 @@ export default function App() {
         </AnimatePresence>
       </div>
 
-      {/* Hidden audio */}
+      {/* Hidden audio — playsinline=1 required for iOS autoplay */}
       {isPlaying && (
         <iframe
           key={musicKey}
           className="absolute h-0 w-0 opacity-0"
-          src="https://www.youtube-nocookie.com/embed/N6-0syjL9nU?autoplay=1&loop=1&playlist=N6-0syjL9nU"
+          src="https://www.youtube-nocookie.com/embed/N6-0syjL9nU?autoplay=1&loop=1&playlist=N6-0syjL9nU&playsinline=1&mute=0"
           title="Bikini Bottom ambience"
-          allow="autoplay; encrypted-media"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
           tabIndex={-1}
           aria-hidden="true"
         />
