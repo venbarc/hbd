@@ -29,11 +29,28 @@ export default function App() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [celebrateKey, setCelebrateKey] = useState(0)
   const [showIABBanner, setShowIABBanner] = useState(false)
-  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const audio1Ref = useRef<HTMLAudioElement | null>(null)
+  const audio2Ref = useRef<HTMLAudioElement | null>(null)
+  // Tracks which audio is active: 1 = first track, 2 = second track
+  const currentTrackRef = useRef<1 | 2>(1)
 
   // Detect in-app browser once on mount
   useEffect(() => {
     if (isInAppBrowser()) setShowIABBanner(true)
+  }, [])
+
+  // When track 1 ends, switch to track 2 (looping)
+  useEffect(() => {
+    const a1 = audio1Ref.current
+    const a2 = audio2Ref.current
+    if (!a1 || !a2) return
+    const handleEnded = () => {
+      currentTrackRef.current = 2
+      a2.currentTime = 0
+      a2.play().catch(() => {})
+    }
+    a1.addEventListener('ended', handleEnded)
+    return () => a1.removeEventListener('ended', handleEnded)
   }, [])
 
   // Auto-rotate greeting every 5 seconds once started
@@ -50,22 +67,23 @@ export default function App() {
   }, [started])
 
   const playAudio = () => {
-    const audio = audioRef.current
-    if (!audio) return
-    audio.currentTime = 0
-    audio.play().catch(() => {
-      // Autoplay blocked — user must tap again; the button is already visible
-    })
+    const a1 = audio1Ref.current
+    if (!a1) return
+    currentTrackRef.current = 1
+    a1.currentTime = 0
+    a1.play().catch(() => {})
   }
 
   const handleToggleMusic = () => {
-    const audio = audioRef.current
-    if (!audio) return
+    const a1 = audio1Ref.current
+    const a2 = audio2Ref.current
     if (isPlaying) {
-      audio.pause()
+      a1?.pause()
+      a2?.pause()
       setIsPlaying(false)
     } else {
-      audio.play().catch(() => {})
+      const active = currentTrackRef.current === 2 ? a2 : a1
+      active?.play().catch(() => {})
       setIsPlaying(true)
     }
   }
@@ -116,15 +134,9 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Hidden HTML5 audio — must exist in DOM always so ref is stable */}
-      <audio
-        ref={audioRef}
-        src="/i would like to greet to the happy birthday.mp3"
-        loop
-        playsInline
-        preload="auto"
-        className="hidden"
-      />
+      {/* Hidden HTML5 audio tracks — must exist in DOM always so refs are stable */}
+      <audio ref={audio1Ref} src="/i would like to greet to the happy birthday.mp3" playsInline preload="auto" className="hidden" />
+      <audio ref={audio2Ref} src="/Happy birthday - @amircarlosagassi  @sarinaagassi  official music video.mp3" loop playsInline preload="auto" className="hidden" />
 
       {/* Layer 1 — background */}
       <div className="absolute inset-0 bg-[url('/sbhouse.webp')] bg-cover bg-center" />
