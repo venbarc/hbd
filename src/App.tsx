@@ -15,12 +15,6 @@ const oneLiners = [
   'Good vibes are drifting in with the current.',
 ]
 
-// Detect Facebook/Instagram/Messenger in-app browsers
-function isInAppBrowser() {
-  const ua = navigator.userAgent || ''
-  return /FBAN|FBAV|FB_IAB|Instagram|Messenger/.test(ua)
-}
-
 export default function App() {
   const [started, setStarted] = useState(false)
   const [subtextIndex, setSubtextIndex] = useState(() =>
@@ -28,16 +22,10 @@ export default function App() {
   )
   const [isPlaying, setIsPlaying] = useState(false)
   const [celebrateKey, setCelebrateKey] = useState(0)
-  const [showIABBanner, setShowIABBanner] = useState(false)
   const audio1Ref = useRef<HTMLAudioElement | null>(null)
   const audio2Ref = useRef<HTMLAudioElement | null>(null)
   // Tracks which audio is active: 1 = first track, 2 = second track
   const currentTrackRef = useRef<1 | 2>(1)
-
-  // Detect in-app browser once on mount
-  useEffect(() => {
-    if (isInAppBrowser()) setShowIABBanner(true)
-  }, [])
 
   // When track 1 ends, switch to track 2 (looping)
   useEffect(() => {
@@ -68,10 +56,19 @@ export default function App() {
 
   const playAudio = () => {
     const a1 = audio1Ref.current
+    const a2 = audio2Ref.current
     if (!a1) return
     currentTrackRef.current = 1
     a1.currentTime = 0
     a1.play().catch(() => {})
+    // Pre-unlock audio2 inside the same user gesture so it can auto-play
+    // when track 1 ends (iOS blocks play() outside a user gesture otherwise)
+    if (a2) {
+      a2.play().then(() => {
+        a2.pause()
+        a2.currentTime = 0
+      }).catch(() => {})
+    }
   }
 
   const handleToggleMusic = () => {
@@ -99,41 +96,6 @@ export default function App() {
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
-      {/* In-app browser banner */}
-      <AnimatePresence>
-        {showIABBanner && (
-          <motion.div
-            initial={{ y: -60, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -60, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 22 }}
-            className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between gap-3 bg-ocean-900/95 px-4 py-3 backdrop-blur-sm"
-          >
-            <p className="text-xs text-white/75 leading-snug">
-              For music &amp; best experience, open in your browser.
-            </p>
-            <div className="flex items-center gap-2 shrink-0">
-              <a
-                href={window.location.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-full bg-pineapple-400 px-3 py-1.5 font-display text-[10px] font-bold uppercase tracking-widest text-ocean-900 whitespace-nowrap"
-              >
-                Open
-              </a>
-              <button
-                type="button"
-                onClick={() => setShowIABBanner(false)}
-                className="text-white/40 hover:text-white/70 text-lg leading-none"
-                aria-label="Dismiss"
-              >
-                ✕
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Hidden HTML5 audio tracks — must exist in DOM always so refs are stable */}
       <audio ref={audio1Ref} src="/i would like to greet to the happy birthday.mp3" playsInline preload="auto" className="hidden" />
       <audio ref={audio2Ref} src="/Happy birthday - @amircarlosagassi  @sarinaagassi  official music video.mp3" loop playsInline preload="auto" className="hidden" />
